@@ -9,8 +9,7 @@ const port = process.env.PORT || 5000;
 
 
 // Middleware 
-
-app.use(cors());
+app.use(cors())
 app.use(express.json());
 
 
@@ -19,7 +18,7 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pfbgofj.mongodb.net/?retryWrites=true&w=majority`;
 
-console.log(uri);
+// console.log(uri);
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -65,7 +64,7 @@ async function run() {
 
   app.post('/jwt', (req, res)=>{
 	const user = req.body
-	console.log(user)
+	// console.log(user)
 	const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
 		expiresIn:'1h'
 	})
@@ -74,7 +73,7 @@ async function run() {
   })
 
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    
 
 	const serviceCollection = client.db('carDoctor').collection('services');
 	const bookingCollection = client.db('carDoctor').collection('booking');
@@ -82,8 +81,23 @@ async function run() {
 //  All data get from DB
 
 	app.get('/services', async(req, res)=>{
-		const cursor = serviceCollection.find()
-		const result = await cursor.toArray()
+
+		const sort = req.query.sort;
+		const search = req.query.search;
+
+
+		// const query = {};
+
+		const query = {title:{$regex: search, $options:'i'}}
+		const options ={
+			sort:{
+				"price": sort==='asc'? 1 : -1
+			}
+		}
+		
+			
+
+		const result = await serviceCollection.find(query, options).toArray()
 		res.send(result)
 	})
 
